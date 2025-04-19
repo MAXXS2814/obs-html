@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>直播</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: black;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+    .content {
+      height: 100%;
+      width: 100%;
+      position: relative;
+    }
+    video {
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      background-color: black;
+    }
+    #unmute-btn, #mute-btn, #fullscreen-btn {
+      position: absolute;
+      padding: 6px 10px;
+      font-size: 14px;
+      background-color: rgba(255, 255, 255, 0.3);
+      border: 1px solid white;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      z-index: 1000;
+    }
+    #unmute-btn {
+      top: 16px;
+      right: 16px;
+    }
+    #mute-btn {
+      top: 16px;
+      right: 110px;
+      display: none;
+    }
+    #fullscreen-btn {
+      bottom: 16px;
+      left: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="content">
+    <video id="video" autoplay muted playsinline></video>
+    <button id="unmute-btn">🔊 开启声音</button>diann
+    <button id="mute-btn">🔇 关闭声音</button>
+    <button id="fullscreen-btn">🖥️ 全屏</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script>
+    const video = document.getElementById('video');
+    const unmuteButton = document.getElementById('unmute-btn');
+    const muteButton = document.getElementById('mute-btn');
+    const fullscreenButton = document.getElementById('fullscreen-btn');
+    const streamUrl = '/hls/live.m3u8';
+
+    // 加载视频流
+    if (Hls.isSupported()) {
+      const hls = new Hls();
+      hls.loadSource(streamUrl);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, function () {
+        video.play();
+      });
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = streamUrl;
+      video.addEventListener('loadedmetadata', function () {
+        video.play();
+      });
+    }
+
+    // 开启声音按钮
+    unmuteButton.addEventListener('click', () => {
+      video.muted = false;
+      video.volume = 1.0;
+      video.play();
+      unmuteButton.style.display = 'none';
+      muteButton.style.display = 'inline-block';
+    });
+
+    // 关闭声音按钮
+    muteButton.addEventListener('click', () => {
+      video.muted = true;
+      video.volume = 0;
+      video.pause();
+      muteButton.style.display = 'none';
+      unmuteButton.style.display = 'inline-block';
+    });
+
+    // 兼容全平台的全屏逻辑
+    fullscreenButton.addEventListener('click', () => {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      if (isIOS && typeof video.webkitEnterFullscreen === 'function') {
+        video.webkitEnterFullscreen();
+      } else if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          alert('无法进入全屏模式：' + err.message);
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    });
+  </script>
+</body>
+</html>
